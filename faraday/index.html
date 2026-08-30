@@ -1,1 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lei de Faraday Diferencial — Simulação Interativa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #f5f5f0;
+    color: #222;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 18px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    padding: 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .panels {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .left-panel {
+    flex: 1 1 260px;
+    min-width: 240px;
+  }
+  .right-panel {
+    flex: 2 1 500px;
+    min-width: 400px;
+  }
+  .slider-group {
+    margin-bottom: 14px;
+  }
+  .slider-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    color: #333;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    cursor: pointer;
+  }
+  .slider-row span.val {
+    min-width: 56px;
+    text-align: right;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    font-weight: bold;
+    color: #0056b3;
+  }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 14px;
+  }
+  button {
+    padding: 6px 14px;
+    font-size: 13px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #f0f0f0;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+  }
+  button:hover { background: #e4e4e4; }
+  button.active { background: #0056b3; color: #fff; border-color: #0056b3; }
+  .formula-box {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 14px;
+    margin-top: 10px;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .formula-box .eq {
+    font-size: 15px;
+    font-weight: bold;
+    color: #0056b3;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 6px;
+  }
+  .formula-box .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .formula-box .label { color: #555; }
+  .formula-box .value { font-weight: bold; color: #222; }
+  .canvas-wrap {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  canvas {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: block;
+  }
+  .caption {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .exercises {
+    margin-top: 20px;
+    padding: 14px;
+    background: #f9f9f4;
+    border-left: 3px solid #d4a017;
+    border-radius: 0 4px 4px 0;
+  }
+  .exercises h3 {
+    font-size: 14px;
+    color: #8a6d1f;
+    margin-bottom: 8px;
+  }
+  .exercises p {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #444;
+    margin-bottom: 6px;
+  }
+</style>
+<base target="_blank">
+</head>
+<body>
 
+<div class="container">
+  <h1>Lei de Faraday — Forma Diferencial</h1>
+  <div class="subtitle">∇ × E⃗ = −∂B⃗/∂t &nbsp;|&nbsp; Capítulo 1: Eletromagnetismo e Radioastronomia</div>
+
+  <div class="panels">
+    <!-- Painel Esquerdo: Controles -->
+    <div class="left-panel">
+      <div class="slider-group">
+        <label>Amplitude B₀ (mT)</label>
+        <div class="slider-row">
+          <input type="range" id="B0Slider" min="0" max="100" value="50" step="1">
+          <span class="val" id="B0Val">5.0</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Frequência Angular ω (rad/s)</label>
+        <div class="slider-row">
+          <input type="range" id="omegaSlider" min="1" max="50" value="10" step="1">
+          <span class="val" id="omegaVal">1.0</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Raio da Região de B, R (m)</label>
+        <div class="slider-row">
+          <input type="range" id="RSlider" min="10" max="80" value="40" step="1">
+          <span class="val" id="RVal">0.40</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Raio de Observação r (m)</label>
+        <div class="slider-row">
+          <input type="range" id="rObsSlider" min="5" max="100" value="30" step="1">
+          <span class="val" id="rObsVal">0.30</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Nº de Vetores E</label>
+        <div class="slider-row">
+          <input type="range" id="nSlider" min="8" max="48" value="24" step="4">
+          <span class="val" id="nVal">24</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="btnPlay" class="active">▶ Play</button>
+        <button id="btnPause">⏸ Pause</button>
+        <button id="btnReset">↺ Reset</button>
+      </div>
+
+      <div class="formula-box">
+        <div class="eq">∇ × E⃗ = −∂B⃗/∂t</div>
+        <div style="font-size:12px; color:#666; margin-bottom:8px;">
+          Simetria cilíndrica: E<sub>φ</sub> = −(r/2)·dB/dt &nbsp;(r≤R)<br>
+          E<sub>φ</sub> = −(R²/2r)·dB/dt &nbsp;(r>R)
+        </div>
+        <div class="row"><span class="label">B(t)</span><span class="value" id="outB">+5.00 mT</span></div>
+        <div class="row"><span class="label">dB/dt</span><span class="value" id="outDB">0.00 mT/s</span></div>
+        <div class="row"><span class="label">E<sub>φ</sub>(r)</span><span class="value" id="outE">0.00 mV/m</span></div>
+        <div class="row"><span class="label">Sentido de E</span><span class="value" id="outSentido">—</span></div>
+      </div>
+    </div>
+
+    <!-- Painel Direito: Canvas -->
+    <div class="right-panel">
+      <div class="canvas-wrap">
+        <div>
+          <canvas id="geoCanvas" width="340" height="340"></canvas>
+          <div class="caption">Campo B (centro) e E rotacional</div>
+        </div>
+        <div>
+          <canvas id="graphCanvas" width="340" height="340"></canvas>
+          <div class="caption">B(t) e E<sub>φ</sub>(t) no ponto r</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercises">
+    <h3>Exercícios Sugeridos</h3>
+    <p><strong>1. Máximo de E:</strong> Observe que E<sub>φ</sub> é máximo quando B cruza zero — é quando dB/dt é máxima! O campo E não acompanha B, mas sim a sua derivada.</p>
+    <p><strong>2. Lei de Lenz:</strong> Quando B cresce (dB/dt > 0), E aponta no sentido horário — a corrente induzida gera um B que se opõe ao crescimento. Quando B decresce, E inverte.</p>
+    <p><strong>3. Perfil radial:</strong> Dentro da região de B (r < R), E cresce linearmente com r. Fora (r > R), E decai como 1/r. Coloque r próximo de R e observe a transição.</p>
+    <p><strong>4. B = 0, mas E ≠ 0:</strong> Pare a animação exatamente quando B = 0. Você verá que E é máximo — prova de que E é gerado pela variação de B, não por B em si!</p>
+  </div>
+</div>
+
+<script>
+// ===================== CONSTANTES =====================
+const geoC = document.getElementById('geoCanvas');
+const geoCtx = geoC.getContext('2d');
+const graphC = document.getElementById('graphCanvas');
+const graphCtx = graphC.getContext('2d');
+
+const B0Slider = document.getElementById('B0Slider');
+const omegaSlider = document.getElementById('omegaSlider');
+const RSlider = document.getElementById('RSlider');
+const rObsSlider = document.getElementById('rObsSlider');
+const nSlider = document.getElementById('nSlider');
+
+const B0Val = document.getElementById('B0Val');
+const omegaVal = document.getElementById('omegaVal');
+const RVal = document.getElementById('RVal');
+const rObsVal = document.getElementById('rObsVal');
+const nVal = document.getElementById('nVal');
+
+const outB = document.getElementById('outB');
+const outDB = document.getElementById('outDB');
+const outE = document.getElementById('outE');
+const outSentido = document.getElementById('outSentido');
+
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnReset = document.getElementById('btnReset');
+
+let t = 0;
+let isPlaying = true;
+let animId = null;
+const dt = 0.016;
+
+let histB = [];
+let histE = [];
+const maxHistory = 300;
+
+// ===================== FÍSICA =====================
+function Bfield(B0, omega, time) {
+  return B0 * Math.cos(omega * time);
+}
+
+function dBdt(B0, omega, time) {
+  return -B0 * omega * Math.sin(omega * time);
+}
+
+function Ephi(B0, omega, time, r, R) {
+  const db = dBdt(B0, omega, time);
+  if (r <= R) {
+    return -(r / 2) * db;
+  } else {
+    return -(R * R / (2 * r)) * db;
+  }
+}
+
+// ===================== DESENHO GEOMETRIA =====================
+function drawGeo(B, dB, Ephi_val, r_obs, R, n) {
+  const ctx = geoCtx;
+  const W = geoC.width, H = geoC.height;
+  const CX = W / 2, CY = H / 2;
+  const SCALE = 130;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grade
+  ctx.strokeStyle = '#e8e8e8';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= W; i += 20) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+  }
+  for (let i = 0; i <= H; i += 20) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+  }
+
+  // Eixos
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(20, CY); ctx.lineTo(W - 20, CY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, 20); ctx.lineTo(CX, H - 20); ctx.stroke();
+
+  // Região onde B existe (círculo tracejado)
+  ctx.strokeStyle = '#bbb';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.arc(CX, CY, R * SCALE, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#999';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('R = ' + R.toFixed(2) + ' m', CX + R * SCALE * 0.5, CY + 14);
+
+  // Círculo de observação r_obs
+  ctx.strokeStyle = '#2e7d32';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 3]);
+  ctx.beginPath();
+  ctx.arc(CX, CY, r_obs * SCALE, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#2e7d32';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('r = ' + r_obs.toFixed(2) + ' m', CX + r_obs * SCALE * 0.35, CY - 8);
+
+  // Campo B na região central (pontos = saindo, cruzes = entrando)
+  const nB = 7; // grid de B
+  const spacing = (R * SCALE * 2) / nB;
+  const offset = (nB - 1) * spacing / 2;
+  ctx.fillStyle = B > 0 ? '#d32f2f' : '#1976d2';
+  ctx.strokeStyle = B > 0 ? '#d32f2f' : '#1976d2';
+  const intensidade = Math.abs(B) / 0.01; // normalizado
+  const alpha = Math.min(1, Math.max(0.15, intensidade));
+  ctx.globalAlpha = alpha;
+
+  for (let i = 0; i < nB; i++) {
+    for (let j = 0; j < nB; j++) {
+      const x = CX - offset + i * spacing;
+      const y = CY - offset + j * spacing;
+      const dist = Math.sqrt((x - CX) ** 2 + (y - CY) ** 2);
+      if (dist > R * SCALE) continue;
+
+      if (B > 0) {
+        // Ponto = saindo da tela (B para fora, +z)
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (B < 0) {
+        // Cruz = entrando na tela (B para dentro, -z)
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x - 3, y); ctx.lineTo(x + 3, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 3); ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Label B
+  ctx.fillStyle = B > 0 ? '#d32f2f' : (B < 0 ? '#1976d2' : '#666');
+  ctx.font = 'bold 12px sans-serif';
+  const bLabel = B > 0 ? 'B = +' + (B * 1000).toFixed(2) + ' mT (⊙)' : (B < 0 ? 'B = ' + (B * 1000).toFixed(2) + ' mT (⊗)' : 'B = 0');
+  ctx.fillText(bLabel, 14, 24);
+
+  // Vetores E circulares (tangenciais)
+  // Sentido: quando dB/dt > 0 (B crescendo), E é horário (Lenz)
+  // quando dB/dt < 0 (B decrescendo), E é anti-horário
+  const sentido = dB > 0 ? -1 : 1; // -1 = horário, +1 = anti-horário
+  const corE = dB > 0 ? '#c62828' : '#1565c0';
+  const nE = n;
+
+  // Desenha em múltiplos raios para mostrar perfil radial
+  const raiosE = [0.15, 0.30, 0.50, 0.70, 0.90];
+  for (let ri = 0; ri < raiosE.length; ri++) {
+    const r_frac = raiosE[ri];
+    const r_pix = r_frac * SCALE;
+    if (r_pix < 15) continue;
+
+    // Calcula E nesse raio
+    let E_local;
+    if (r_frac <= R) {
+      E_local = -(r_frac / 2) * dB;
+    } else {
+      E_local = -(R * R / (2 * r_frac)) * dB;
+    }
+    const E_mag = Math.abs(E_local);
+    if (E_mag < 1e-8) continue;
+
+    // Tamanho da seta proporcional a |E|
+    const tamBase = Math.min(18, Math.max(4, 8 * Math.log10(1 + E_mag * 1e4)));
+
+    for (let i = 0; i < nE; i++) {
+      const theta = i * 2 * Math.PI / nE;
+      const xs = CX + r_pix * Math.cos(theta);
+      const ys = CY + r_pix * Math.sin(theta);
+
+      // Tangente: sentido horário ou anti-horário
+      const tang = theta + sentido * Math.PI / 2;
+      const dx = tamBase * Math.cos(tang);
+      const dy = tamBase * Math.sin(tang);
+
+      // Opacidade proporcional à magnitude
+      const op = Math.min(1, Math.max(0.2, E_mag * 500));
+      ctx.globalAlpha = op;
+      ctx.strokeStyle = corE;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(xs, ys);
+      ctx.lineTo(xs + dx, ys + dy);
+      ctx.stroke();
+
+      // Ponta
+      const ang = Math.atan2(dy, dx);
+      const hl = 4;
+      ctx.fillStyle = corE;
+      ctx.beginPath();
+      ctx.moveTo(xs + dx, ys + dy);
+      ctx.lineTo(xs + dx - hl * Math.cos(ang - 0.35), ys + dy - hl * Math.sin(ang - 0.35));
+      ctx.lineTo(xs + dx - hl * Math.cos(ang + 0.35), ys + dy - hl * Math.sin(ang + 0.35));
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Label E
+  ctx.fillStyle = dB > 0 ? '#c62828' : (dB < 0 ? '#1565c0' : '#666');
+  ctx.font = 'bold 12px sans-serif';
+  const eLabel = dB > 0 ? 'dB/dt > 0  →  E horário' : (dB < 0 ? 'dB/dt < 0  →  E anti-horário' : 'dB/dt = 0  →  E = 0');
+  ctx.fillText(eLabel, 14, H - 14);
+
+  // Indicador de dB/dt
+  ctx.fillStyle = '#555';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('dB/dt = ' + (dB * 1000).toFixed(2) + ' mT/s', 14, H - 30);
+}
+
+// ===================== DESENHO GRÁFICO =====================
+function drawGraph(B0, omega, time, B, Ephi_val) {
+  const ctx = graphCtx;
+  const W = graphC.width, H = graphC.height;
+  const PAD = 36;
+  const GW = W - 2 * PAD, GH = H - 2 * PAD;
+  const GX = PAD, GY = PAD;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fafafa';
+  ctx.fillRect(GX, GY, GW, GH);
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(GX, GY, GW, GH);
+
+  // Grid
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i < 5; i++) {
+    const yy = GY + (i / 5) * GH;
+    ctx.beginPath(); ctx.moveTo(GX, yy); ctx.lineTo(GX + GW, yy); ctx.stroke();
+  }
+  for (let i = 1; i < 6; i++) {
+    const xx = GX + (i / 6) * GW;
+    ctx.beginPath(); ctx.moveTo(xx, GY); ctx.lineTo(xx, GY + GH); ctx.stroke();
+  }
+
+  // Eixos
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(GX, GY - 5); ctx.lineTo(GX, GY + GH + 5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(GX - 5, GY + GH / 2); ctx.lineTo(GX + GW + 5, GY + GH / 2); ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#444';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('t (s)', GX + GW - 20, GY + GH + 22);
+  ctx.save();
+  ctx.translate(14, GY + GH / 2 + 30);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('B (mT)  /  E_φ (mV/m)', 0, 0);
+  ctx.restore();
+
+  // Ticks X
+  ctx.fillStyle = '#666';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('t-3s', GX + 4, GY + GH + 14);
+  ctx.fillText('t-1.5s', GX + GW * 0.5 - 16, GY + GH + 14);
+  ctx.fillText('t', GX + GW - 10, GY + GH + 14);
+
+  // Ticks Y
+  ctx.fillText('+B₀', GX - 28, GY + 10);
+  ctx.fillText('0', GX - 10, GY + GH / 2 + 4);
+  ctx.fillText('−B₀', GX - 28, GY + GH - 4);
+
+  // Atualiza histórico
+  histB.push(B * 1000); // mT
+  histE.push(Ephi_val * 1000); // mV/m
+  if (histB.length > maxHistory) {
+    histB.shift();
+    histE.shift();
+  }
+
+  const len = histB.length;
+  if (len < 2) return;
+
+  // Plot B(t) — vermelho
+  ctx.strokeStyle = '#d32f2f';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < len; i++) {
+    const px = GX + (i / (maxHistory - 1)) * GW;
+    const val = histB[i];
+    const py = GY + GH / 2 - (val / (B0 * 1000 * 1.3)) * (GH / 2);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Plot E_φ(t) — azul
+  ctx.strokeStyle = '#1976d2';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  // Escala E para caber no mesmo gráfico
+  const maxE_est = B0 * 1000 * 1.5; // estimativa
+  for (let i = 0; i < len; i++) {
+    const px = GX + (i / (maxHistory - 1)) * GW;
+    const val = histE[i];
+    const py = GY + GH / 2 - (val / maxE_est) * (GH / 2);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Legenda
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#d32f2f';
+  ctx.fillRect(GX + GW - 90, GY + 8, 14, 3);
+  ctx.fillStyle = '#333';
+  ctx.fillText('B(t)', GX + GW - 72, GY + 18);
+
+  ctx.fillStyle = '#1976d2';
+  ctx.fillRect(GX + GW - 90, GY + 24, 14, 3);
+  ctx.fillStyle = '#333';
+  ctx.fillText('E_φ(t)', GX + GW - 72, GY + 34);
+}
+
+// ===================== LOOP PRINCIPAL =====================
+function update() {
+  const B0 = parseFloat(B0Slider.value) / 1000; // T
+  const omega = parseFloat(omegaSlider.value) / 10; // rad/s
+  const R = parseFloat(RSlider.value) / 100; // m
+  const r_obs = parseFloat(rObsSlider.value) / 100; // m
+  const n = parseInt(nSlider.value);
+
+  // Atualiza labels
+  B0Val.textContent = (B0 * 1000).toFixed(1);
+  omegaVal.textContent = omega.toFixed(1);
+  RVal.textContent = R.toFixed(2);
+  rObsVal.textContent = r_obs.toFixed(2);
+  nVal.textContent = n;
+
+  // Física
+  const B = Bfield(B0, omega, t);
+  const dB = dBdt(B0, omega, t);
+  const E_val = Ephi(B0, omega, t, r_obs, R);
+
+  // Atualiza caixa de resultados
+  outB.textContent = (B >= 0 ? '+' : '') + (B * 1000).toFixed(2) + ' mT';
+  outDB.textContent = (dB >= 0 ? '+' : '') + (dB * 1000).toFixed(2) + ' mT/s';
+  outE.textContent = (E_val >= 0 ? '+' : '') + (E_val * 1000).toFixed(2) + ' mV/m';
+
+  if (Math.abs(dB) < 1e-10) {
+    outSentido.textContent = '—';
+    outSentido.style.color = '#666';
+  } else if (dB > 0) {
+    outSentido.textContent = 'Horário (Lenz)';
+    outSentido.style.color = '#c62828';
+  } else {
+    outSentido.textContent = 'Anti-horário (Lenz)';
+    outSentido.style.color = '#1565c0';
+  }
+
+  // Desenha
+  drawGeo(B, dB, E_val, r_obs, R, n);
+  drawGraph(B0 * 1000, omega, t, B, E_val);
+
+  if (isPlaying) {
+    t += dt;
+  }
+
+  animId = requestAnimationFrame(update);
+}
+
+// ===================== CONTROLES =====================
+btnPlay.addEventListener('click', () => {
+  isPlaying = true;
+  btnPlay.classList.add('active');
+  btnPause.classList.remove('active');
+});
+
+btnPause.addEventListener('click', () => {
+  isPlaying = false;
+  btnPause.classList.add('active');
+  btnPlay.classList.remove('active');
+});
+
+btnReset.addEventListener('click', () => {
+  t = 0;
+  histB = [];
+  histE = [];
+  isPlaying = false;
+  btnPause.classList.add('active');
+  btnPlay.classList.remove('active');
+  update();
+});
+
+// Sliders resetam histórico
+[B0Slider, omegaSlider, RSlider, rObsSlider, nSlider].forEach(el => {
+  el.addEventListener('input', () => {
+    histB = [];
+    histE = [];
+  });
+});
+
+// Inicia
+update();
+</script>
+
+</body>
+</html>
