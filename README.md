@@ -1,15 +1,14 @@
-# Radioastro Interativo
+# 📡 Radioastronomia Interativa
 
-Notebook interativo sobre polarização em radioastronomia, com widgets para explorar os conceitos de forma visual e prática.
+Simulações interativas no estilo MIT Mathlets para o livro de Radioastronomia.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lucasfrsantana/radioastro-interativo/main?urlpath=lab/tree/polarizacao.ipynb)
+## Simulações disponíveis
 
-## Como executar
+| Capítulo | Tópico | Link |
+|---|---|---|
+| 1 | Lei de Gauss | [Abrir](https://lucasfrsantana.github.io/radioastronomia-interativa/gauss/) |
+| 1 | Lei de Faraday (∇ × E = −∂B/∂t) | [Abrir](https://lucasfrsantana.github.io/radioastronomia-interativa/faraday/) |
 
-Clique no badge acima para abrir o notebook diretamente no navegador, sem precisar instalar nada. A primeira execução pode levar alguns minutos enquanto o ambiente é construído; execuções seguintes são bem mais rápidas.
+## Como usar
 
-## Dependências
-
-- numpy
-- matplotlib
-- ipywidgets
+Basta clicar nos links acima. Não requer instalação — funciona direto no navegador.
