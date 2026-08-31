@@ -7,8 +7,8 @@ Simulações interativas para o livro de Radioastronomia.
 | Capítulo | Tópico | Link |
 |---|---|---|
 | 1 | Lei de Gauss | [Abrir](https://lucasfrsantana.github.io/radioastro-interativo/gauss/) |
-| 1 | Lei de Faraday (∇ × E = −∂B/∂t) | [Abrir](https://lucasfrsantana.github.io/radioastro-interativo/faraday/) |
-
+| 1 | Lei de Faraday | [Abrir](https://lucasfrsantana.github.io/radioastro-interativo/faraday/) |
+| 1 | Polarização | [Abrir](https://lucasfrsantana.github.io/radioastro-interativo/polarization/) |
 ## Como usar
 
 Basta clicar nos links acima. Não requer instalação — funciona direto no navegador.
