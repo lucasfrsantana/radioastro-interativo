@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polarização de Ondas — Simulação Interativa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #f5f5f0;
+    color: #222;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 18px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    padding: 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .panels {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .left-panel {
+    flex: 1 1 260px;
+    min-width: 240px;
+  }
+  .right-panel {
+    flex: 2 1 500px;
+    min-width: 400px;
+  }
+  .slider-group {
+    margin-bottom: 16px;
+  }
+  .slider-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    cursor: pointer;
+  }
+  .slider-row span.val {
+    min-width: 52px;
+    text-align: right;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    font-weight: bold;
+    color: #0056b3;
+  }
+  .formula-box {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 14px;
+    margin-top: 18px;
+    font-family: "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .formula-box .eq {
+    font-size: 13px;
+    font-weight: bold;
+    color: #0056b3;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 6px;
+    text-align: center;
+  }
+  .formula-box .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .formula-box .label { color: #555; }
+  .formula-box .value { font-weight: bold; color: #222; }
+  .canvas-wrap {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  canvas {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: block;
+  }
+  .caption {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .exercises {
+    margin-top: 20px;
+    padding: 14px;
+    background: #f9f9f4;
+    border-left: 3px solid #d4a017;
+    border-radius: 0 4px 4px 0;
+  }
+  .exercises h3 {
+    font-size: 14px;
+    color: #8a6d1f;
+    margin-bottom: 8px;
+  }
+  .exercises p {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  .estado-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Polarização de Ondas — Simulação Interativa</h1>
+  <div class="subtitle">Eletromagnetismo Aplicado e Radioastronomia</div>
+
+  <div class="panels">
+    <!-- Painel Esquerdo: Controles -->
+    <div class="left-panel">
+      <div class="slider-group">
+        <label>Amplitude E₀x</label>
+        <div class="slider-row">
+          <input type="range" id="e0xSlider" min="0" max="20" value="10" step="1">
+          <span class="val" id="e0xVal">1.0</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Amplitude E₀y</label>
+        <div class="slider-row">
+          <input type="range" id="e0ySlider" min="0" max="20" value="10" step="1">
+          <span class="val" id="e0yVal">1.0</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Diferença de Fase δ (graus)</label>
+        <div class="slider-row">
+          <input type="range" id="deltaSlider" min="-180" max="180" value="0" step="15">
+          <span class="val" id="deltaVal">0°</span>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Velocidade de Propagação (ω)</label>
+        <div class="slider-row">
+          <input type="range" id="speedSlider" min="0" max="50" value="15" step="1">
+          <span class="val" id="speedVal">1.5x</span>
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <div class="eq">(E<sub>x</sub>/E<sub>0x</sub>)² + (E<sub>y</sub>/E<sub>0y</sub>)² − 2(E<sub>x</sub>E<sub>y</sub>/E<sub>0x</sub>E<sub>0y</sub>)cos δ = sen² δ</div>
+        <div class="row"><span class="label">δ (radianos)</span><span class="value" id="outDeltaRad">0.00π</span></div>
+        <div class="row"><span class="label">cos(δ)</span><span class="value" id="outCos">1.00</span></div>
+        <div class="row"><span class="label">Estado de Polarização</span><span class="value estado-badge" id="outEstado">Linear</span></div>
+      </div>
+    </div>
+
+    <!-- Painel Direito: Canvas -->
+    <div class="right-panel">
+      <div class="canvas-wrap">
+        <div>
+          <canvas id="wave3DCanvas" width="340" height="340"></canvas>
+          <div class="caption">Propagação TEM no Espaço (Eixos: X, Y, Z)</div>
+        </div>
+        <div>
+          <canvas id="transversalCanvas" width="340" height="340"></canvas>
+          <div class="caption">Elipse no Plano Transversal (Fixando z = 0)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="exercises">
+    <h3>Exercícios Sugeridos para Análise</h3>
+    <p><strong>1. Polarização Linear (δ = nπ):</strong> Ajuste a diferença de fase δ para 0° ou 180°. Observe que a elipse colapsa em uma reta e os componentes oscilam perfeitamente em fase (ou oposição).</p>
+    <p><strong>2. Polarização Circular (δ = ±90°):</strong> Ajuste E₀x e E₀y para o mesmo valor (ex: 1.0) e coloque δ em 90° ou -90°. Verifique a trajetória circular da extremidade do vetor campo elétrico.</p>
+    <p><strong>3. Polarização Elíptica Geral:</strong> Varie δ para ângulos intermediários (ex: 45°) com amplitudes diferentes. Note como o plano de polarização se inclina conforme ditado pelo termo cruzado da equação.</p>
+    <p><strong>4. Aplicação em Instrumentação:</strong> Na recepção de sinais de rádio, o alinhamento das amplitudes e o controle rígido de defasagem (δ) definem a pureza da captação desejada pelos alimentadores da antena.</p>
+  </div>
+</div>
+
+<script>
+// ===================== ELEMENTOS HTML =====================
+const c3D = document.getElementById('wave3DCanvas');
+const ctx3D = c3D.getContext('2d');
+const c2D = document.getElementById('transversalCanvas');
+const ctx2D = c2D.getContext('2d');
+
+const sE0x = document.getElementById('e0xSlider');
+const sE0y = document.getElementById('e0ySlider');
+const sDelta = document.getElementById('deltaSlider');
+const sSpeed = document.getElementById('speedSlider');
+
+const vE0x = document.getElementById('e0xVal');
+const vE0y = document.getElementById('e0yVal');
+const vDelta = document.getElementById('deltaVal');
+const vSpeed = document.getElementById('speedVal');
+
+const outDeltaRad = document.getElementById('outDeltaRad');
+const outCos = document.getElementById('outCos');
+const outEstado = document.getElementById('outEstado');
+
+// ===================== VARIÁVEIS GLOBAIS =====================
+let time = 0;
+const k = 1; 
+
+// ===================== CORES =====================
+const COR_EX = '#d32f2f'; // Vermelho
+const COR_EY = '#1976d2'; // Azul
+const COR_ETOT = '#7b1fa2'; // Roxo
+const COR_EIXOS = '#888';
+
+// ===================== NOVA PROJEÇÃO 3D =====================
+// Perspectiva Clássica de Livro-Texto:
+// Z cresce para a direita (horizontal)
+// Y cresce para cima (vertical)
+// X cresce saindo da tela (diagonal inferior esquerda)
+const OX = 60;  // Origem X deslocada para a esquerda
+const OY = 170; // Origem Y no centro vertical
+const SCALE_Z = 18;
+const SCALE_XY = 35;
+
+function proj3D(x, y, z) {
+  const tiltX_x = 0.6; // Projeção horizontal do eixo X
+  const tiltX_y = 0.4; // Projeção vertical do eixo X
+  return {
+    x: OX + z * SCALE_Z - x * SCALE_XY * tiltX_x,
+    y: OY - y * SCALE_XY + x * SCALE_XY * tiltX_y
+  };
+}
+
+// ===================== LOOP DE ANIMAÇÃO =====================
+function render() {
+  const E0x = parseFloat(sE0x.value) / 10;
+  const E0y = parseFloat(sE0y.value) / 10;
+  const deltaDeg = parseInt(sDelta.value);
+  const deltaRad = deltaDeg * Math.PI / 180;
+  const speed = parseFloat(sSpeed.value) * 0.005;
+
+  time += speed;
+
+  vE0x.textContent = E0x.toFixed(1);
+  vE0y.textContent = E0y.toFixed(1);
+  vDelta.textContent = deltaDeg + '°';
+  vSpeed.textContent = (speed * 100).toFixed(1) + 'x';
+
+  outDeltaRad.textContent = (deltaDeg / 180).toFixed(2) + 'π';
+  outCos.textContent = Math.cos(deltaRad).toFixed(2);
+
+  let estado = "Elíptica";
+  const modD = Math.abs(deltaDeg) % 180;
+  if (E0x === 0 || E0y === 0 || modD === 0) {
+    estado = "Linear";
+  } else if (modD === 90 && Math.abs(E0x - E0y) < 0.01) {
+    estado = deltaDeg > 0 ? "Circular (Dir.)" : "Circular (Esq.)";
+  }
+  outEstado.textContent = estado;
+
+  draw3D(E0x, E0y, deltaRad);
+  draw2D(E0x, E0y, deltaRad);
+
+  requestAnimationFrame(render);
+}
+
+function draw3D(E0x, E0y, deltaRad) {
+  const ctx = ctx3D;
+  ctx.clearRect(0, 0, c3D.width, c3D.height);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, c3D.width, c3D.height);
+
+  // Eixos Principais
+  const ptZ = proj3D(0, 0, 4 * Math.PI + 0.5);
+  const ptX = proj3D(2.8, 0, 0);
+  const ptY = proj3D(0, 2.8, 0);
+  
+  ctx.strokeStyle = COR_EIXOS;
+  ctx.lineWidth = 1.2;
+  
+  // Eixo Z
+  ctx.beginPath(); ctx.moveTo(OX, OY); ctx.lineTo(ptZ.x, ptZ.y); ctx.stroke();
+  // Eixo X
+  ctx.beginPath(); ctx.moveTo(OX, OY); ctx.lineTo(ptX.x, ptX.y); ctx.stroke();
+  // Eixo Y
+  ctx.beginPath(); ctx.moveTo(OX, OY); ctx.lineTo(ptY.x, ptY.y); ctx.stroke();
+
+  ctx.fillStyle = '#555';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('z', ptZ.x + 5, ptZ.y + 4);
+  ctx.fillText('x', ptX.x - 12, ptX.y + 10);
+  ctx.fillText('y', ptY.x - 4, ptY.y - 8);
+
+  const zMax = 4 * Math.PI;
+  const zStep = 0.05;
+  const zStepVetores = 0.4; // Espaçamento entre as hastes de preenchimento
+  
+  // 1. Hastes (Vetores) da componente X (Vermelha)
+  ctx.strokeStyle = 'rgba(211, 47, 47, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let z = 0; z <= zMax; z += zStepVetores) {
+    const ex = E0x * Math.sin(k * z - time);
+    const pt0 = proj3D(0, 0, z);
+    const pt = proj3D(ex, 0, z);
+    ctx.moveTo(pt0.x, pt0.y); ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+
+  // 2. Envoltória da componente X
+  ctx.strokeStyle = COR_EX;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let z = 0; z <= zMax; z += zStep) {
+    const ex = E0x * Math.sin(k * z - time);
+    const pt = proj3D(ex, 0, z);
+    if (z === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+
+  // 3. Hastes (Vetores) da componente Y (Azul)
+  ctx.strokeStyle = 'rgba(25, 118, 210, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let z = 0; z <= zMax; z += zStepVetores) {
+    const ey = E0y * Math.sin(k * z - time + deltaRad);
+    const pt0 = proj3D(0, 0, z);
+    const pt = proj3D(0, ey, z);
+    ctx.moveTo(pt0.x, pt0.y); ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+
+  // 4. Envoltória da componente Y
+  ctx.strokeStyle = COR_EY;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let z = 0; z <= zMax; z += zStep) {
+    const ey = E0y * Math.sin(k * z - time + deltaRad);
+    const pt = proj3D(0, ey, z);
+    if (z === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+
+  // 5. Envoltória da onda resultante (Roxa)
+  ctx.strokeStyle = COR_ETOT;
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  for (let z = 0; z <= zMax; z += zStep) {
+    const ex = E0x * Math.sin(k * z - time);
+    const ey = E0y * Math.sin(k * z - time + deltaRad);
+    const pt = proj3D(ex, ey, z);
+    if (z === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+
+  // Vetor resultante na origem (z=0) acompanhando a elipse
+  const ex0 = E0x * Math.sin(-time);
+  const ey0 = E0y * Math.sin(-time + deltaRad);
+  const pt0 = proj3D(ex0, ey0, 0);
+  drawArrow(ctx, OX, OY, pt0.x, pt0.y, COR_ETOT, 2);
+}
+
+function draw2D(E0x, E0y, deltaRad) {
+  const ctx = ctx2D;
+  const W = c2D.width, H = c2D.height;
+  const CX = W / 2, CY = H / 2;
+  const SCALE = 60; 
+  
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fafafa';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  for (let i = -2; i <= 2; i += 1) {
+    if(i === 0) continue;
+    ctx.beginPath(); ctx.moveTo(CX + i * SCALE, 0); ctx.lineTo(CX + i * SCALE, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, CY - i * SCALE); ctx.lineTo(W, CY - i * SCALE); ctx.stroke();
+  }
+
+  ctx.strokeStyle = COR_EIXOS;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, 0); ctx.lineTo(CX, H); ctx.stroke();
+  ctx.fillStyle = '#555';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('x', W - 15, CY + 15);
+  ctx.fillText('y', CX + 5, 15);
+
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  for (let th = 0; th <= Math.PI * 2.05; th += 0.05) {
+    const x = E0x * Math.sin(th);
+    const y = E0y * Math.sin(th + deltaRad);
+    const px = CX + x * SCALE;
+    const py = CY - y * SCALE;
+    if (th === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const theta = -time;
+  const ex = E0x * Math.sin(theta);
+  const ey = E0y * Math.sin(theta + deltaRad);
+  const px = CX + ex * SCALE;
+  const py = CY - ey * SCALE;
+
+  ctx.strokeStyle = COR_EX;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(px, CY); ctx.stroke();
+  
+  ctx.strokeStyle = COR_EY;
+  ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX, py); ctx.stroke();
+  
+  ctx.strokeStyle = '#aaa';
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath(); ctx.moveTo(px, CY); ctx.lineTo(px, py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, py); ctx.lineTo(px, py); ctx.stroke();
+  ctx.setLineDash([]);
+
+  drawArrow(ctx, CX, CY, px, py, COR_ETOT, 2.5);
+
+  ctx.fillStyle = COR_ETOT;
+  ctx.beginPath(); ctx.arc(px, py, 4, 0, 2*Math.PI); ctx.fill();
+}
+
+function drawArrow(ctx, fromx, fromy, tox, toy, color, width) {
+  const headlen = 8;
+  const dx = tox - fromx;
+  const dy = toy - fromy;
+  const angle = Math.atan2(dy, dx);
+  
+  if(Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.moveTo(fromx, fromy);
+  ctx.lineTo(tox, toy);
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(tox, toy);
+  ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Inicializa a simulação
+requestAnimationFrame(render);
+</script>
+
+</body>
+</html>
